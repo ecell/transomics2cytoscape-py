@@ -12,7 +12,8 @@ def createTransomicEdge(row, nt, edgetbl, suid):
     pass
 
 def importLayer(row):
-    pass
+    getKgml(row.array[2])
+    kgml = row.array[2]
 
 def getKgml(pathwayID):
     f = open("pathwayID" + ".xml", "a")
