@@ -24,7 +24,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
-        'py4cytoscape'
+        'py4cytoscape',
+        'biopython'
     ],
     classifiers=[
         'Intended Audience :: Science/Research',
