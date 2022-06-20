@@ -22,6 +22,24 @@ def getNodeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
     nt['LAYER_INDEX'] = row.array[0]
     return nt
 
+def getEdgeTableWithLayerinfo(row: pd.Series):
+    et = p4c.get_table_columns(table="edge", network=row.array[4])
+    print("Getting edge info. This function is kinda slow...")
+    ei = p4c.get_edge_info(et["SUID"], row.array[4])
+    print("Finished getting edge info.")
+    return ei
+
+# getEdgeTableWithLayerinfo <- function(row){
+#     et = RCy3::getTableColumns(table = "edge", network = as.numeric(row[5]))
+#     message("Getting edge info. This function is kinda slow...")
+#     ei = RCy3::getEdgeInfo(et$SUID, as.numeric(row[5]))
+#     message("Finished getting edge info.")
+#     et["source"] = unlist(lapply(ei, function(x) x$source))
+#     et["target"] = unlist(lapply(ei, function(x) x$target))
+#     LAYER_INDEX = rep(row[1], nrow(et))
+#     return(cbind(et, LAYER_INDEX))
+# }
+
 def importLayer(row: pd.Series) -> int:
     #print(row.array)
     #getKgml(row.array[1])
@@ -286,17 +304,6 @@ def createTransomicEdge(row, nt, edgetbl, suid):
 #     #       directed = FALSE, interaction = 'interacts with'))
 #     #return(list(c(sourceSuid,midnodeSuid),c(midnodeSuid,targetSuid)))
 #     #RCy3::addCyEdges(list(c(sourceSuid,midnodeSuid),c(midnodeSuid,targetSuid)))
-# }
-
-# getEdgeTableWithLayerinfo <- function(row){
-#     et = RCy3::getTableColumns(table = "edge", network = as.numeric(row[5]))
-#     message("Getting edge info. This function is kinda slow...")
-#     ei = RCy3::getEdgeInfo(et$SUID, as.numeric(row[5]))
-#     message("Finished getting edge info.")
-#     et["source"] = unlist(lapply(ei, function(x) x$source))
-#     et["target"] = unlist(lapply(ei, function(x) x$target))
-#     LAYER_INDEX = rep(row[1], nrow(et))
-#     return(cbind(et, LAYER_INDEX))
 # }
 
 # getLayeredEdges <- function(edgetables){
