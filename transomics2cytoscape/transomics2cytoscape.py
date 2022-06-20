@@ -3,7 +3,7 @@ import py4cytoscape as p4c
 import time
 import requests
 
-def create3Dnetwork(networkLayers):
+def create3Dnetwork(networkLayers: str) -> int:
     layerTable = pd.read_table(networkLayers, header=None, sep="\t")
     networkSUID = layerTable.apply(importLayer, axis=1)
     layerTable = pd.concat([layerTable, networkSUID], axis=1)
@@ -16,13 +16,13 @@ def create3Dnetwork(networkLayers):
     # p4c.set_visual_style(style_name=stylename, network=suid)
     # return suid
 
-def getNodeTableWithLayerinfo(row):
+def getNodeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
     nt = p4c.get_table_columns(table="node", network=row.array[4])
     nt['z_location'] = row.array[2]
     nt['LAYER_INDEX'] = row.array[0]
     return nt
 
-def importLayer(row):
+def importLayer(row: pd.Series) -> int:
     #print(row.array)
     #getKgml(row.array[1])
     r = requests.get("https://rest.kegg.jp/get/" + row.array[1] + "/kgml")
@@ -38,7 +38,7 @@ def importLayer(row):
     p4c.load_table_data(xy, table_key_column="SUID")
     return res['networks'][0]
 
-def getLayeredNodes(nodetables):
+def getLayeredNodes(nodetables: pd.DataFrame) -> pd.DataFrame:
     nodetable3d = pd.concat(nodetables.array)
     return nodetable3d.rename(columns={"SUID": "id"})
 
