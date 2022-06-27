@@ -1,15 +1,11 @@
 import setuptools
 
-# Nasty but effective way to set __version__
-__version__=None
-exec(open("transomics2cytoscape/_version.py").read())
-
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="transomics2cytoscape",
-    version=__version__,
+    version="0.0.1",
     author="Kozo Nishida",
     author_email="kozo.nishida@gmail.com",
     maintainer='Kozo Nishida',
@@ -25,7 +21,7 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         'py4cytoscape',
-        'biopython'
+        'requests'
     ],
     classifiers=[
         'Intended Audience :: Science/Research',
