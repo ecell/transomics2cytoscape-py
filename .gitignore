@@ -1,0 +1,3 @@
+build/*
+dist/*
+transomics2cytoscape.egg-info/*
