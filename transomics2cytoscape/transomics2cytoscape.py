@@ -26,7 +26,7 @@ def getNodeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
 def getEdgeTableWithLayerinfo(row: pd.Series):
     et = p4c.get_table_columns(table="edge", network=row.array[4])
     print("Getting edge info. This function is kinda slow...")
-    ei = p4c.get_edge_info(et["SUID"], row.array[4])
+    ei = p4c.get_edge_info(et["SUID"].tolist(), row.array[4])
     print("Finished getting edge info.")
     return ei
 
