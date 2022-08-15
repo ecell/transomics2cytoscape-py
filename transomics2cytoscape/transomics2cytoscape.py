@@ -43,12 +43,16 @@ def getLayeredNodes(nodetables: pd.DataFrame) -> pd.DataFrame:
     nodetable3d = pd.concat(nodetables.array)
     return nodetable3d.rename(columns={"SUID": "id"})
 
-def getEdgeTableWithLayerinfo(row: pd.Series):
+def getEdgeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
     et = p4c.get_table_columns(table="edge", network=row.array[4])
+    #return et
     print("Getting edge info. This function is kinda slow...")
-    ei = p4c.get_edge_info(et["SUID"].tolist(), row.array[4])
+    ei = p4c.get_edge_info(et["SUID"].tolist(), network=row.array[4])
     print("Finished getting edge info.")
-    return ei
+    et['source'] = list(map(lambda x: x['source'], ei))
+    et['target'] = list(map(lambda x: x['target'], ei))
+    et['LAYER_INDEX'] = row.array[0]
+    return et
 
 # getEdgeTableWithLayerinfo <- function(row){
 #     et = RCy3::getTableColumns(table = "edge", network = as.numeric(row[5]))
