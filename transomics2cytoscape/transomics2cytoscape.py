@@ -39,6 +39,10 @@ def getNodeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
     nt['LAYER_INDEX'] = row.array[0]
     return nt
 
+def getLayeredNodes(nodetables: pd.DataFrame) -> pd.DataFrame:
+    nodetable3d = pd.concat(nodetables.array)
+    return nodetable3d.rename(columns={"SUID": "id"})
+
 def getEdgeTableWithLayerinfo(row: pd.Series):
     et = p4c.get_table_columns(table="edge", network=row.array[4])
     print("Getting edge info. This function is kinda slow...")
@@ -56,10 +60,6 @@ def getEdgeTableWithLayerinfo(row: pd.Series):
 #     LAYER_INDEX = rep(row[1], nrow(et))
 #     return(cbind(et, LAYER_INDEX))
 # }
-
-def getLayeredNodes(nodetables: pd.DataFrame) -> pd.DataFrame:
-    nodetable3d = pd.concat(nodetables.array)
-    return nodetable3d.rename(columns={"SUID": "id"})
 
 # getLayeredNodes <- function(nodetables){
 #     nodetable3d = dplyr::bind_rows(nodetables)
