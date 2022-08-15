@@ -3,19 +3,19 @@ import py4cytoscape as p4c
 import time
 import requests
 
-def create3Dnetwork(networkLayers: str):
+def create3Dnetwork(networkLayers):
     layerTable = pd.read_table(networkLayers, header=None, sep="\t")
     networkSUID = layerTable.apply(importLayer, axis=1)
     layerTable = pd.concat([layerTable, networkSUID], axis=1)
-    #nodetables = layerTable.apply(getNodeTableWithLayerinfo, axis=1)
-    #layeredNodes = getLayeredNodes(nodetables)
+    nodetables = layerTable.apply(getNodeTableWithLayerinfo, axis=1)
+    layeredNodes = getLayeredNodes(nodetables)
     edgetables = layerTable.apply(getEdgeTableWithLayerinfo, axis=1)
-    return edgetables
-    # p4c.commands_post('cy3d set renderer')
-    # suid = p4c.create_network_from_data_frames(layeredNodes, None)
-    # stylename = p4c.import_visual_styles(filename="yugi2014.xml")
-    # p4c.set_visual_style(style_name=stylename, network=suid)
-    # return suid
+    layeredEdges = pd.concat(edgetables.tolist())
+    layeredNodes.to_csv("layeredNodes.csv")
+    layeredEdges.to_csv("layeredEdges.csv")
+    p4c.commands_post('cy3d set renderer')
+    suID = p4c.create_network_from_data_frames(layeredNodes.astype(str), layeredEdges.astype(str))
+    return suID
 
 def getNodeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
     nt = p4c.get_table_columns(table="node", network=row.array[4])
