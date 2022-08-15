@@ -17,6 +17,22 @@ def create3Dnetwork(networkLayers):
     suID = p4c.create_network_from_data_frames(layeredNodes.astype(str), layeredEdges.astype(str))
     return suID
 
+def importLayer(row: pd.Series) -> int:
+    #print(row.array)
+    #getKgml(row.array[1])
+    r = requests.get("https://rest.kegg.jp/get/" + row.array[1] + "/kgml")
+    kgml = row.array[1] + ".xml"
+    f = open(kgml, "w")
+    f.write(r.text)
+    f.close()
+    print("Importing " + kgml)
+    res = p4c.import_network_from_file(kgml)
+    time.sleep(3)
+    xy = p4c.get_table_columns(table='node', columns=['KEGG_NODE_X', 'KEGG_NODE_Y'])
+    xy.rename(columns={"KEGG_NODE_X": "x_location", "KEGG_NODE_Y": "y_location"})
+    p4c.load_table_data(xy, table_key_column="SUID")
+    return res['networks'][0]
+
 def getNodeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
     nt = p4c.get_table_columns(table="node", network=row.array[4])
     nt['z_location'] = row.array[2]
@@ -40,22 +56,6 @@ def getEdgeTableWithLayerinfo(row: pd.Series):
 #     LAYER_INDEX = rep(row[1], nrow(et))
 #     return(cbind(et, LAYER_INDEX))
 # }
-
-def importLayer(row: pd.Series) -> int:
-    #print(row.array)
-    #getKgml(row.array[1])
-    r = requests.get("https://rest.kegg.jp/get/" + row.array[1] + "/kgml")
-    kgml = row.array[1] + ".xml"
-    f = open(kgml, "w")
-    f.write(r.text)
-    f.close()    
-    print("Importing " + kgml)
-    res = p4c.import_network_from_file(kgml)
-    time.sleep(3)
-    xy = p4c.get_table_columns(table='node', columns=['KEGG_NODE_X', 'KEGG_NODE_Y'])
-    xy.rename(columns={"KEGG_NODE_X": "x_location", "KEGG_NODE_Y": "y_location"})
-    p4c.load_table_data(xy, table_key_column="SUID")
-    return res['networks'][0]
 
 def getLayeredNodes(nodetables: pd.DataFrame) -> pd.DataFrame:
     nodetable3d = pd.concat(nodetables.array)
