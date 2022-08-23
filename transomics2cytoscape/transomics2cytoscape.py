@@ -54,6 +54,23 @@ def getEdgeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
     et['LAYER_INDEX'] = row.array[0]
     return et
 
+def installCyApps():
+    apps = p4c.get_installed_apps()
+    # checking Apps
+    is_cy3d_installed = False
+    is_keggscape_installed = False
+    for app in apps:
+        if app['appName'] == 'Cy3D':
+            is_cy3d_installed = True
+        if app['appName'] == 'KEGGScape':
+            is_keggscape_installed = True
+    if is_cy3d_installed:
+        print("Cy3D is NOT installed. transomics2cytoscape installs Cy3D.")
+        p4c.install_app("Cy3D")
+    if is_keggscape_installed:
+        print("KEGGScape is NOT installed. transomics2cytoscape installs KEGGScape.")
+        p4c.install_app("KEGGScape")
+
 # getEdgeTableWithLayerinfo <- function(row){
 #     et = RCy3::getTableColumns(table = "edge", network = as.numeric(row[5]))
 #     message("Getting edge info. This function is kinda slow...")
