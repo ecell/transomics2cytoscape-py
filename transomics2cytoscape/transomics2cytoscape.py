@@ -18,8 +18,6 @@ def create3Dnetwork(networkLayers):
     return suID
 
 def importLayer(row: pd.Series) -> int:
-    #print(row.array)
-    #getKgml(row.array[1])
     r = requests.get("https://rest.kegg.jp/get/" + row.array[1] + "/kgml")
     kgml = row.array[1] + ".xml"
     f = open(kgml, "w")
@@ -29,8 +27,14 @@ def importLayer(row: pd.Series) -> int:
     res = p4c.import_network_from_file(kgml)
     time.sleep(3)
     xy = p4c.get_table_columns(table='node', columns=['KEGG_NODE_X', 'KEGG_NODE_Y'])
-    xy.rename(columns={"KEGG_NODE_X": "x_location", "KEGG_NODE_Y": "y_location"})
+    xy.rename(columns={"KEGG_NODE_X": "x_location", "KEGG_NODE_Y": "y_location"}, inplace=True)
     p4c.load_table_data(xy, table_key_column="SUID")
+    p4c.update_style_mapping(p4c.get_current_style(), p4c.map_visual_property("NODE_X_LOCATION", "x_location", "p"))
+    p4c.update_style_mapping(p4c.get_current_style(), p4c.map_visual_property("NODE_Y_LOCATION", "y_location", "p"))
+    p4c.fit_content()
+    if row.array[3]:
+        print("Creating a node at each midpoint of the edge...")
+        createMidnodes(res['networks'][0])
     return res['networks'][0]
 
 def getNodeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
