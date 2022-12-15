@@ -25,7 +25,7 @@ def importLayer(row: pd.Series) -> int:
     f.close()
     print("Importing " + kgml)
     res = p4c.import_network_from_file(kgml)
-    time.sleep(3)
+    #time.sleep(3)
     xy = p4c.get_table_columns(table='node', columns=['KEGG_NODE_X', 'KEGG_NODE_Y'])
     xy.rename(columns={"KEGG_NODE_X": "x_location", "KEGG_NODE_Y": "y_location"}, inplace=True)
     p4c.load_table_data(xy, table_key_column="SUID")
@@ -255,54 +255,34 @@ def createTransomicEdge(row, nt, edgetbl, suid):
 #     source2target(tsvFilePath, columnIndex, outputFilename, "ec")
 # }
 
-# createMidnodes <- function(networkSUID){
-#     #nt = RCy3::getTableColumns(table = 'node', network = networkSUID)
-#     et = RCy3::getTableColumns(table = 'edge', network = networkSUID)
-#     message("getting node positions...")
-#     # nodePosition = RCy3::getNodePosition(unlist(nt[['SUID']]),
-#     #                                    network = networkSUID)
-#     xyloc = RCy3::getTableColumns(table = 'node',
-#         columns = c('SUID', 'x_location', 'y_location'), network = networkSUID)
-#     message("getting edge information...")
-#     einfo = RCy3::getEdgeInfo(unlist(et[['SUID']]), network = networkSUID)
-#     einfodf = dplyr::bind_rows(einfo)
-#     midxydf = dplyr::bind_rows(lapply(einfo, getMidLoc, xyloc))
-#     midNodeInfo = dplyr::bind_cols(einfodf, midxydf)
-#     midNodeInfo = dplyr::rename(midNodeInfo, orig_edge_SUID=SUID)
-#     message("creating midpoint nodes...")
-#     midNodes = RCy3::addCyNodes(as.character(et[['SUID']]))
-
-#     RCy3::loadTableData(midNodeInfo, data.key.column = "orig_edge_SUID",
-#                         table = "node", table.key.column = "name")
-#     # RCy3::loadTableData(xyloc, data.key.column = "SUID",
-#     #                     table = "node", table.key.column = "SUID")
-#     # message("updating style...")
-#     RCy3::updateStyleMapping(RCy3::getCurrentStyle(),
-#                 RCy3::mapVisualProperty("NODE_X_LOCATION", "x_location", "p"))
-#     RCy3::updateStyleMapping(RCy3::getCurrentStyle(),
-#                 RCy3::mapVisualProperty("NODE_Y_LOCATION", "y_location", "p"))
-#     message("deleting edges...")
-#     RCy3::invertEdgeSelection()
-#     RCy3::deleteSelectedEdges()
-#     message("start collecting node IDs to connect...")
-#     midNodesName2suid = dplyr::bind_rows(midNodes)
-#     midNodeInfo = dplyr::bind_cols(midNodeInfo, midNodesName2suid['SUID'])
-#     src2mid = midNodeInfo[c('source', 'SUID')]
-#     src2mid = dplyr::rename(src2mid, target = SUID)
-#     src2mid = src2mid %>% purrr::transpose()
-#     mid2tgt = midNodeInfo[c('SUID', 'target')]
-#     mid2tgt = dplyr::rename(mid2tgt, source = SUID)
-#     mid2tgt = mid2tgt %>% purrr::transpose()
-#     res = RCy3::cyrestPOST(paste("networks", networkSUID, "edges", sep = "/"),
-#             body=src2mid)
-#     #res = dplyr::bind_rows(res)
-#     #res = dplyr::bind_cols(res['SUID'], midNodeInfo)
-#     res = RCy3::cyrestPOST(paste("networks", networkSUID, "edges", sep = "/"),
-#             body=mid2tgt)
-#     #message("creating edges for midpoionts...")
-#     #saveRDS(edgelist, file = "midpoint_edgesrctgt.rds")
-#     #RCy3::addCyEdges(edgelist)
-# }
+def createMidnodes(networkSUID):
+    et = p4c.get_table_columns(table='edge', network=networkSUID)
+    print("getting node positions...")
+    xyloc = p4c.get_table_columns(table='node', network=networkSUID, columns=['SUID', 'x_location', 'y_location'])
+    print("getting edge information...")
+    einfo = p4c.get_edge_info(et['SUID'].tolist(), network=networkSUID)
+    einfodf = pd.DataFrame.from_dict(einfo)
+    midxydf = pd.DataFrame.from_dict([getMidLoc(x, xyloc) for x in einfo])
+    midNodeInfo = einfodf.join(midxydf)    
+    midNodeInfo.rename(columns={"SUID": "orig_edge_SUID"}, inplace=True)
+    print("creating midpoint nodes...")
+    midNodes = p4c.add_cy_nodes(et['SUID'].apply(str).to_list())
+    midNodeInfo['orig_edge_SUID'] = midNodeInfo['orig_edge_SUID'].apply(str)
+    p4c.load_table_data(midNodeInfo, data_key_column="orig_edge_SUID", table="node", table_key_column="name")
+    p4c.update_style_mapping(p4c.get_current_style(), p4c.map_visual_property("NODE_X_LOCATION", "x_location", "p"))
+    p4c.update_style_mapping(p4c.get_current_style(), p4c.map_visual_property("NODE_Y_LOCATION", "y_location", "p"))
+    print("deleting edges...")
+    p4c.invert_edge_selection()
+    p4c.delete_selected_edges()
+    print("start collecting node IDs to connect...")
+    midNodesName2suid =  pd.DataFrame.from_dict(midNodes)
+    midNodeInfo = pd.merge(midNodeInfo, midNodesName2suid, left_on='orig_edge_SUID', right_on='name')
+    src2mid = midNodeInfo[['source', 'SUID']]
+    src2mid.rename(columns={"SUID": "target"}, inplace=True)
+    mid2tgt = midNodeInfo[['SUID', 'target']]
+    mid2tgt.rename(columns={"SUID": "source"}, inplace=True)
+    res = p4c.cyrest_post("networks/" + str(networkSUID) + "/edges", body=src2mid.to_dict('records'))
+    res = p4c.cyrest_post("networks/" + str(networkSUID) + "/edges", body=mid2tgt.to_dict('records'))
 
 # getMidLoc = function(elem, xyloc){
 #     sourcexy=xyloc[rownames(xyloc) == elem$source, ]
