@@ -284,20 +284,12 @@ def createMidnodes(networkSUID):
     res = p4c.cyrest_post("networks/" + str(networkSUID) + "/edges", body=src2mid.to_dict('records'))
     res = p4c.cyrest_post("networks/" + str(networkSUID) + "/edges", body=mid2tgt.to_dict('records'))
 
-# getMidLoc = function(elem, xyloc){
-#     sourcexy=xyloc[rownames(xyloc) == elem$source, ]
-#     targetxy=xyloc[rownames(xyloc) == elem$target, ]
-#     midx_location=(as.numeric(sourcexy['x_location']) +
-#                     as.numeric(targetxy['x_location'])) / 2
-#     midy_location=(as.numeric(sourcexy['y_location']) +
-#                     as.numeric(targetxy['y_location'])) / 2
-#     #midy_location=(sourcexy['y_location']+targetxy['y_location'])/2
-#     return(list(x_location=unlist(midx_location),
-#                 y_location=unlist(midy_location)))
-#     # return(list(edge_SUID=elem$SUID, x_location=unlist(midx_location),
-#     #             y_location=unlist(midy_location), source=elem$source,
-#     #             target=elem$target))
-# }
+def getMidLoc(elem, xyloc):
+    sourcexy = xyloc[xyloc['SUID'] == elem['source']]
+    targetxy = xyloc[xyloc['SUID'] == elem['target']]
+    midx_location = (int(sourcexy['x_location'].values[0]) + int(targetxy['x_location'].values[0])) / 2
+    midy_location = (int(sourcexy['y_location'].values[0]) + int(targetxy['y_location'].values[0])) / 2
+    return {'x_location': midx_location, 'y_location': midy_location}
 
 # connectMidnodeEdges = function(elem, midNodeInfo){
 #     midnodeSuid = elem$SUID
