@@ -15,6 +15,7 @@ def create3Dnetwork(networkLayers):
     layeredEdges.to_csv("layeredEdges.csv")
     p4c.commands_post('cy3d set renderer')
     suID = p4c.create_network_from_data_frames(layeredNodes.astype(str), layeredEdges.astype(str))
+    setTransomicStyle(stylexml, suID)
     return suID
 
 def importLayer(row: pd.Series) -> int:
@@ -39,6 +40,9 @@ def importLayer(row: pd.Series) -> int:
 
 def getNodeTableWithLayerinfo(row: pd.Series) -> pd.DataFrame:
     nt = p4c.get_table_columns(table="node", network=row.array[4])
+    if 'x_location' not in nt.columns:
+        xy = p4c.get_table_columns(table="node", network=row.array[4], columns=['x_location', 'y_location'])
+        nt = pd.concat([nt, xy], axis=1)
     nt['z_location'] = row.array[2]
     nt['LAYER_INDEX'] = row.array[0]
     return nt
@@ -93,6 +97,12 @@ def getMidLoc(elem, xyloc):
     midx_location = (int(sourcexy['x_location'].values[0]) + int(targetxy['x_location'].values[0])) / 2
     midy_location = (int(sourcexy['y_location'].values[0]) + int(targetxy['y_location'].values[0])) / 2
     return {'x_location': midx_location, 'y_location': midy_location}
+
+def setTransomicStyle(xml, suid) -> None:
+    #xml is must be a local file path
+    stylename = p4c.import_visual_styles(xml)
+    res = p4c.set_visual_style(stylename[0], network = suid)
+    print(stylename[0] + " " + res['message'])
 
 def installCyApps():
     apps = p4c.get_installed_apps()
@@ -309,10 +319,4 @@ def createTransomicEdge(row, nt, edgetbl, suid):
 #     edgetable3d["source"] = as.character(edgetable3d$source)
 #     edgetable3d["target"] = as.character(edgetable3d$target)
 #     return(edgetable3d)
-# }
-
-# setTransomicStyle <- function(xml, suid){
-#     stylename = RCy3::importVisualStyles(filename = xml)
-#     RCy3::setVisualStyle(stylename, network = suid)
-#     message(paste("Set visual style to", stylename))
 # }
