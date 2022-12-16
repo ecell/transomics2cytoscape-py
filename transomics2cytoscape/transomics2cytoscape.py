@@ -140,34 +140,42 @@ def installCyApps():
 # }
 
 def createTransomicEdges(suid, transomicEdges):
-    pass
+    transomicTable = pd.read_csv(transomicEdges, sep="\t", header=None)
+    nt = p4c.get_table_columns(table = "node", network = suid)
+    edgetbl = pd.DataFrame()
+    for index, row in transomicTable.iterrows():
+        edgetbl = createTransomicEdge(row, nt, edgetbl, suid)
+    
+    
+
 
 def createTransomicEdge(row, nt, edgetbl, suid):
-    pass
+    sourceLayerIndex = row[0]
+    sourceTableColumnName = row[1]
+    sourceTableValue = row[2]
+    targetLayerIndex = row[3]
+    targetTableColumnName = row[4]
+    targetTableValue = row[5]
+    transomicEdgeType = row[6]
+    edgetbl = createNode2Node(nt, sourceLayerIndex, sourceTableValue, sourceTableColumnName,
+                    targetLayerIndex, targetTableValue, targetTableColumnName,
+                    transomicEdgeType, edgetbl)
+    return edgetbl
 
-# create3Dnetwork <- function(networkDataDir, networkLayers,
-#                             stylexml) {
-#     owd <- setwd(networkDataDir)
-#     on.exit(setwd(owd))
-#     tryCatch({
-#         RCy3::cytoscapePing()
-#     }, error = function(e) {
-#         stop("can't connect to Cytoscape. \n
-#             Please check that Cytoscape is up and running.")
-#     })
-#     installCyApps()
-#     layerTable = utils::read.table(networkLayers, sep="\t")
-#     networkSUID = apply(layerTable, 1, importLayer)
-#     layerTable = cbind(layerTable, networkSUID)
-#     nodetables <- apply(layerTable, 1, getNodeTableWithLayerinfo)
-#     layeredNodes <- getLayeredNodes(nodetables)
-#     edgetables <- apply(layerTable, 1, getEdgeTableWithLayerinfo)
-#     layeredEdges <- getLayeredEdges(edgetables)
-#     RCy3::commandsPOST('cy3d set renderer')
-#     suID <- RCy3::createNetworkFromDataFrames(layeredNodes, layeredEdges)
-#     setTransomicStyle(stylexml, suID)
-#     return(suID)
-# }
+def createNode2Node(nt, sourceLayerIndex, sourceTableValue, sourceTableColumnName,
+                    targetLayerIndex, targetTableValue, targetTableColumnName,
+                    transomicEdgeType, edgetbl):
+    sourceLayerNt = nt[nt['LAYER_INDEX'] == sourceLayerIndex]
+    sourceNodeRows = sourceLayerNt[sourceLayerNt[sourceTableColumnName].str.contains(sourceTableValue)]
+    targetLayerNt = nt[nt['LAYER_INDEX'] == targetLayerIndex]
+    targetNodeRows = targetLayerNt[targetLayerNt[targetTableColumnName].str.contains(targetTableValue)]
+    if len(targetNodeRows) > 0:
+        for i, sourceNodeRow in sourceNodeRows.iterrows():
+            sourceSUID = sourceNodeRows.iloc[i, 0]
+            for j, targetNodeRow in targetNodeRows.iterrows():
+                targetSUID = targetNodeRows.iloc[j, 0]
+                edgetbl = pd.concat([edgetbl, pd.Series({'source': sourceSUID, 'target': targetSUID})], axis=0)
+    return edgetbl
 
 # createTransomicEdges <- function(suid, transomicEdges) {
 #     transomicTable <- utils::read.table(transomicEdges, sep="\t")
